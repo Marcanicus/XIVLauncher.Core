@@ -13,7 +13,7 @@ Cross-platform version of XIVLauncher, optimized for Steam Deck. Comes with a ve
 
 4. Added a Download Now! button on the wine tab to download wine without trying to log in.
 
-5. Added XL_PATH environment variable. This will let you specify an alternate directory for the xlcore folder. So instead of using the default ~/.xlcore, you can use XL_PATH=~/.local/share/xlcore, for example.
+5. Added XL_PATH environment variable. This will let you specify an alternate directory for the xlcore folder. So instead of using the default `~/.xlcore`, you can use `XL_PATH=~/.local/share/xlcore`, for example.
 
 6. This will create a completely new folder, so you'll need to configure it to point to the correct ffxiv game and config folders. This may help with multiboxing, since you can run multiple copies of the game from different prefixes / wine installs.
 
