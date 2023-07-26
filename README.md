@@ -5,15 +5,27 @@ Cross-platform version of XIVLauncher, optimized for Steam Deck. Comes with a ve
 
 ## Features
 
--NEW: Added Proton as an option. Selecting Proton from the Installation Type in the Wine tab will reveal another menu with all the proton installs from Steam. This includes any GE-Proton versions you have in the compatibilitytools.d folder, and any extra proton versions (such as Proton Experimental) you have installed.
--App Launcher is currently disabled; I need to do a bit of refactoring to get it to work with 1.0.4.
--Added a button on the Wine tab for a Wine Explorer with WineD3D. Some apps may not like DXVK, so you can use this to launch them without DXVK.
--Added a Download Now! button on the wine tab to download wine without trying to log in.
--Added XL_PATH environment variable. This will let you specify an alternate directory for the xlcore folder. So instead of using the default ~/.xlcore, you can use XL_PATH=~/.local/share/xlcore, for example. -This will create a completely new folder, so you'll need to configure it to point to the correct ffxiv game and config folders. This may help with multiboxing, since you can run multiple copies of the game -from different prefixes / wine installs.
--Added a DXVK tab to Settings. This has all the DXVK settings now. Default version is 1.10.3, but you can try out 2.0, 2.1, and 2.2 versions, including the new gplasync patch for 2.1 & 2.2. Be aware that -Reshade, GShade, and Dalamud may all have issues with 2.0+. If the game doesn't launch, or is glitchy, change this back to one of the 1.10 version.
--Hud options and Async option have been moved to DXVK tab. Frame rate limit has also been added.
--WineD3D can now be enabled by selecting Disabled as the Dxvk version in the DXVK tab.
--Font size can be adjusted (requires restart).
+1. NEW: Added Proton as an option. Selecting Proton from the Installation Type in the Wine tab will reveal another menu with all the proton installs from Steam. This includes any GE-Proton versions you have in the compatibilitytools.d folder, and any extra proton versions (such as Proton Experimental) you have installed.
+
+2. App Launcher is currently disabled; I need to do a bit of refactoring to get it to work with 1.0.4.
+
+3. Added a button on the Wine tab for a Wine Explorer with WineD3D. Some apps may not like DXVK, so you can use this to launch them without DXVK.
+
+4. Added a Download Now! button on the wine tab to download wine without trying to log in.
+
+5. Added XL_PATH environment variable. This will let you specify an alternate directory for the xlcore folder. So instead of using the default ~/.xlcore, you can use XL_PATH=~/.local/share/xlcore, for example.
+
+6. This will create a completely new folder, so you'll need to configure it to point to the correct ffxiv game and config folders. This may help with multiboxing, since you can run multiple copies of the game from different prefixes / wine installs.
+
+7.Added a DXVK tab to Settings. This has all the DXVK settings now. Default version is 1.10.3, but you can try out 2.0, 2.1, and 2.2 versions, including the new gplasync patch for 2.1 & 2.2. Be aware that 8.
+
+8.Reshade, GShade, and Dalamud may all have issues with 2.0+. If the game doesn't launch, or is glitchy, change this back to one of the 1.10 version.
+
+9. Hud options and Async option have been moved to DXVK tab. Frame rate limit has also been added.
+
+10.WineD3D can now be enabled by selecting Disabled as the Dxvk version in the DXVK tab.
+
+11. Font size can be adjusted (requires restart).
 
 ## Using on Steam Deck
 If you want to use XIVLauncher on your Steam Deck, feel free to [follow our guide in our FAQ](https://goatcorp.github.io/faq/steamdeck). If you're having trouble, you can [join our Discord server](https://discord.gg/3NMcUV5) - please don't use the GitHub issues for troubleshooting unless you're sure that your problem is an actual issue with XIVLauncher.
