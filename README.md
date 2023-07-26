@@ -17,13 +17,13 @@ Cross-platform version of XIVLauncher, optimized for Steam Deck. Comes with a ve
 
 6. This will create a completely new folder, so you'll need to configure it to point to the correct ffxiv game and config folders. This may help with multiboxing, since you can run multiple copies of the game from different prefixes / wine installs.
 
-7.Added a DXVK tab to Settings. This has all the DXVK settings now. Default version is 1.10.3, but you can try out 2.0, 2.1, and 2.2 versions, including the new gplasync patch for 2.1 & 2.2. Be aware that 8.
+7. Added a DXVK tab to Settings. This has all the DXVK settings now. Default version is 1.10.3, but you can try out 2.0, 2.1, and 2.2 versions, including the new gplasync patch for 2.1 & 2.2. Be aware that 8.
 
-8.Reshade, GShade, and Dalamud may all have issues with 2.0+. If the game doesn't launch, or is glitchy, change this back to one of the 1.10 version.
+8. Reshade, GShade, and Dalamud may all have issues with 2.0+. If the game doesn't launch, or is glitchy, change this back to one of the 1.10 version.
 
 9. Hud options and Async option have been moved to DXVK tab. Frame rate limit has also been added.
 
-10.WineD3D can now be enabled by selecting Disabled as the Dxvk version in the DXVK tab.
+10. WineD3D can now be enabled by selecting Disabled as the Dxvk version in the DXVK tab.
 
 11. Font size can be adjusted (requires restart).
 
