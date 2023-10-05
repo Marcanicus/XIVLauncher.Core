@@ -25,19 +25,19 @@ public class SettingsTabTroubleshooting : SettingsTab
 
         ImGui.Separator();
 
-        ImGui.Text("\nClear the Wine Prefix - delete the ~/.xlcore/wineprefix and protonprefix folders");
+        ImGui.Text("\nClear the Wine Prefix - delete the ~/.xlcore/wineprefix folder");
         if (ImGui.Button("Clear Prefix"))
         {
             Program.ClearPrefix();
         }
 
-        ImGui.Text("\nClear the managed Wine install and DXVK");
+        ImGui.Text("\nClear the managed Wine and DXVK installs. Custom versions won't be touched.");
         if (ImGui.Button("Clear Wine & DXVK"))
         {
             Program.ClearTools(true);
         }
 
-        ImGui.Text("\nClear all the files and folders related to Dalamud. Your settings will not be touched,\nbut all your plugins will be uninstalled, including 3rd-party repos.");
+        ImGui.Text("\nClear all the files and folders related to Dalamud. Your settings will not be touched,\nbut all your plugins will be uninstalled, including custom repos.");
         if (ImGui.Button("Clear Dalamud"))
         {
             Program.ClearPlugins(true);
@@ -53,12 +53,18 @@ public class SettingsTabTroubleshooting : SettingsTab
         if (ImGui.Button("Clear Settings"))
         {
             Program.ClearSettings(true);
-        }     
+        }
 
         ImGui.Text("\nDo all of the above.");
         if (ImGui.Button("Clear Everything"))
         {
             Program.ClearAll(true);
+        }
+
+        ImGui.Text("\nOpen the .xlcore folder in your file browser.");
+        if (ImGui.Button("Open .xlcore"))
+        {
+            PlatformHelpers.OpenBrowser(Program.storage.Root.FullName);
         }
 
         ImGui.Text("\nGenerate a troubleshooting pack to upload to the official Discord channel");

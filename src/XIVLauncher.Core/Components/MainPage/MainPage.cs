@@ -46,7 +46,7 @@ public class MainPage : Page
         this.actionButtons.OnSettingsButtonClicked += () => this.App.State = LauncherApp.LauncherState.Settings;
         this.actionButtons.OnStatusButtonClicked += () => AppUtil.OpenBrowser("https://is.xivup.com/");
 
-        this.Padding = new Vector2(32f, 32f);
+        this.Padding = new Vector2(32f, 32f) * ImGuiHelpers.GlobalScale;
 
         var savedAccount = App.Accounts.CurrentAccount;
 
@@ -72,7 +72,7 @@ public class MainPage : Page
     {
         base.Draw();
 
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(32f, 32f));
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(32f, 32f) * ImGuiHelpers.GlobalScale);
         this.newsFrame.Draw();
 
         ImGui.SameLine();
@@ -739,7 +739,7 @@ public class MainPage : Page
         }
         else if (Environment.OSVersion.Platform == PlatformID.Unix)
         {
-            if (App.Settings.WineType == WineType.Custom)
+            if (App.Settings.WineType.Value == WineType.Custom)
             {
                 if (App.Settings.WineBinaryPath == null)
                     throw new Exception("Custom wine binary path wasn't set.");
@@ -760,7 +760,7 @@ public class MainPage : Page
 
                 await Program.CompatibilityTools.EnsureTool(tempPath).ConfigureAwait(false);
 
-                var gameFixApply = new GameFixApply(App.Settings.GamePath, App.Settings.GameConfigPath, Program.CompatibilityTools.Prefix, tempPath);
+                var gameFixApply = new GameFixApply(App.Settings.GamePath, App.Settings.GameConfigPath, Program.CompatibilityTools.Settings.Prefix, tempPath);
                 gameFixApply.UpdateProgress += (text, hasProgress, progress) =>
                 {
                     App.LoadingPage.Line1 = "Applying game-specific fixes...";

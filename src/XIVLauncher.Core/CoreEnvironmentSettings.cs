@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 
 namespace XIVLauncher.Core;
 
@@ -15,8 +16,6 @@ public static class CoreEnvironmentSettings
     public static bool ClearLogs => CheckEnvBool("XL_CLEAR_LOGS");
     public static bool ClearAll => CheckEnvBool("XL_CLEAR_ALL");
     public static bool? UseSteam => CheckEnvBoolOrNull("XL_USE_STEAM"); // Fix for Steam Deck users who lock themselves out
-
-    public static string Home => System.Environment.GetEnvironmentVariable("HOME");
 
     private static bool CheckEnvBool(string key)
     {
@@ -38,5 +37,19 @@ public static class CoreEnvironmentSettings
         string dirty = Environment.GetEnvironmentVariable(envvar) ?? "";
         if (badstring.Equals("")) return dirty;
         return string.Join(separator, Array.FindAll<string>(dirty.Split(separator, StringSplitOptions.RemoveEmptyEntries), s => !s.Contains(badstring)));
+    }
+
+    static public bool GameModeInstalled { get; }
+
+    static CoreEnvironmentSettings()
+    {  
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            var handle = IntPtr.Zero;
+            GameModeInstalled = NativeLibrary.TryLoad("libgamemodeauto.so.0", out handle);
+            NativeLibrary.Free(handle);
+        }
+        else
+            GameModeInstalled = false;
     }
 }

@@ -58,10 +58,6 @@ class Program
         CoreEnvironmentSettings.IsDeckGameMode.Value :
         Steam != null && Steam.IsValid && Steam.IsRunningOnSteamDeck();
 
-    public const float DEFAULT_FONT_SIZE = 22f;
-
-    public static float FontMultiplier;
-
     private const string APP_NAME = "xlcore";
 
     private static string[] mainargs;
@@ -120,21 +116,26 @@ class Program
         Config.GlobalScale ??= 1.0f;
 
         Config.GameModeEnabled ??= false;
-        Config.DxvkVersion ??= DxvkVersion.v1_10_3;
-        Config.DxvkCustomPath ??= "";
-        Config.DxvkAsyncEnabled ??= true;
-        Config.DxvkGPLAsyncCacheEnabled ??= false;
-        Config.DxvkFrameRate ??= 0;
         Config.ESyncEnabled ??= true;
         Config.FSyncEnabled ??= false;
-        Config.DxvkHudCustom ??= "fps,frametimes,gpuload,version";
-        Config.MangoHudCustom ??= Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".config", "MangoHud", "MangoHud.conf");
 
         Config.WineType ??= WineType.Managed;
-        Config.WineVersion ??= WineVersion.Wine7_10;
-        Config.RBWineVersion ??= RBWineVersion.Wine8_12;
-        Config.RBProtonVersion ??= RBProtonVersion.Proton8_10;
+        if (!Wine.Versions.ContainsKey(Config.WineVersion ?? ""))
+            Config.WineVersion = "wine-xiv-staging-fsync-git-7.10.r3.g560db77d";
         Config.WineBinaryPath ??= "/usr/bin";
+        Config.WineDebugVars ??= "-all";
+
+        if (!Dxvk.Versions.ContainsKey(Config.DxvkVersion ?? ""))
+            Config.DxvkVersion = Dxvk.GetDefaultVersion();
+        Config.DxvkAsyncEnabled ??= true;
+        Config.DxvkGPLAsyncCacheEnabled ??= false;
+        Config.DxvkFrameRateLimit ??= 0;
+        Config.DxvkHud ??= DxvkHud.None;
+        Config.DxvkHudCustom ??= Dxvk.DXVK_HUD;
+        Config.MangoHud ??= MangoHud.None;
+        Config.MangoHudCustomString ??= Dxvk.MANGOHUD_CONFIG;
+        Config.MangoHudCustomFile ??= Dxvk.MANGOHUD_CONFIGFILE;
+
         if (string.IsNullOrEmpty(Config.SteamPath))
         {
             var home = System.Environment.GetEnvironmentVariable("HOME");
@@ -147,8 +148,7 @@ class Program
                 Config.SteamPath = Path.Combine(home, ".steam", "root");
         }
         Config.ProtonVersion ??= "Proton 7.0";
-        Config.SteamRuntime ??= "SteamLinuxRuntime_soldier";
-        Config.WineDebugVars ??= "-all";
+        Config.SteamRuntime ??= OSInfo.IsFlatpak ? "Disabled" : Proton.GetDefaultRuntime();
 
         Config.FixLDP ??= false;
         Config.FixIM ??= false;
@@ -162,9 +162,6 @@ class Program
         Config.HelperApp3Enabled ??= false;
         Config.HelperApp3 ??= string.Empty;
         Config.HelperApp3WineD3D ??= false;
-
-        Config.FontPxSize ??= DEFAULT_FONT_SIZE;
-        FontMultiplier = Config.FontPxSize.Value / DEFAULT_FONT_SIZE;
     }
 
     public const uint STEAM_APP_ID = 39210;
@@ -187,16 +184,14 @@ class Program
             badxlpath = true;
             badxlpathex = e;
         }
-        SetupLogging(args);
-        LoadConfig(storage);
-        ProtonManager.GetVersions(Config.SteamPath);
+        Wine.Initialize();
+        Dxvk.Initialize();
 
         if (badxlpath)
         {
             Log.Error(badxlpathex, $"Bad value for XL_PATH: {useAltPath}. Using ~/.xlcore instead.");
         }
 
-        // This all depends on this.storage being loaded, so it needs to be below the storage setup block.
         if (CoreEnvironmentSettings.ClearAll)
         {
             ClearAll();
@@ -210,6 +205,10 @@ class Program
             if (CoreEnvironmentSettings.ClearLogs) ClearLogs();
         }
 
+        SetupLogging(mainargs);
+        LoadConfig(storage);
+        Proton.Initialize(Config.SteamPath);
+        
         Secrets = GetSecretProvider(storage);
 
         Loc.SetupWithFallbacks();
@@ -245,8 +244,6 @@ class Program
                 default:
                     throw new PlatformNotSupportedException();
             }
-            Distro.Initialize();
-            Log.Information("Running on {DistroName}. {wineInfo}", Distro.Name, (Distro.Platform == Platform.Linux) ? $"Using {Distro.Package} package for managed wine downloads." : string.Empty);   
             if (!Config.IsIgnoringSteam ?? true)
             {
                 try
@@ -282,17 +279,9 @@ class Program
         var version = $"{AppUtil.GetAssemblyVersion()} ({AppUtil.GetGitHash()})";
 #endif
 
-#if UNOFFICIAL
-        string suffix = " RB-Unofficial";
-#elif TESTING
-        string suffix = " *TEST BUILD*";
-#else
-        string suffix = "";
-#endif
-
         // Create window, GraphicsDevice, and all resources necessary for the demo.
         VeldridStartup.CreateWindowAndGraphicsDevice(
-            new WindowCreateInfo(50, 50, (int)(1280 * FontMultiplier), (int)(800 * FontMultiplier), WindowState.Normal, $"XIVLauncher {version}{suffix}"),
+            new WindowCreateInfo(50, 50, (int)(1280 * ImGuiHelpers.GlobalScale), (int)(800 * ImGuiHelpers.GlobalScale), WindowState.Normal, $"XIVLauncher {version} RB-Unofficial"),
             new GraphicsDeviceOptions(false, null, true, ResourceBindingModel.Improved, true, true),
             out window,
             out gd);
@@ -306,21 +295,20 @@ class Program
         cl = gd.ResourceFactory.CreateCommandList();
         Log.Debug("Veldrid OK!");
 
-        bindings = new ImGuiBindings(gd, gd.MainSwapchain.Framebuffer.OutputDescription, window.Width, window.Height, storage.GetFile("launcherUI.ini"), Config.FontPxSize ?? 21.0f);
+        bindings = new ImGuiBindings(gd, gd.MainSwapchain.Framebuffer.OutputDescription, window.Width, window.Height, storage.GetFile("launcherUI.ini"), (Config.FontPxSize ?? 22.0f) * ImGuiHelpers.GlobalScale);
         Log.Debug("ImGui OK!");
 
         StyleModelV1.DalamudStandard.Apply();
-        ImGui.GetIO().FontGlobalScale = Config.GlobalScale ?? 1.0f;
 
         var needUpdate = false;
 
-        if (Config.DoVersionCheck ?? false && Distro.IsFlatpak)
+        if (OSInfo.IsFlatpak && (Config.DoVersionCheck ?? false))
         {
             var versionCheckResult = UpdateCheck.CheckForUpdate().GetAwaiter().GetResult();
 
             if (versionCheckResult.Success)
                 needUpdate = versionCheckResult.NeedUpdate;
-        }
+        }   
 
         needUpdate = CoreEnvironmentSettings.IsUpgrade ? true : needUpdate;
 
@@ -383,14 +371,10 @@ class Program
 
     public static void CreateCompatToolsInstance()
     {
-        var wineLogFile = new FileInfo(Path.Combine(storage.GetFolder("logs").FullName, "wine.log"));
-        var winePrefix = storage.GetFolder("wineprefix");
-        var protonPrefix = storage.GetFolder("protonprefix");
-        protonPrefix.CreateSubdirectory("pfx");
+        var dxvkSettings = new DxvkSettings(Dxvk.FolderName, Dxvk.DownloadUrl, storage.Root.FullName, Dxvk.AsyncEnabled, Dxvk.FrameRateLimit, Dxvk.DxvkHudEnabled, Dxvk.DxvkHudString, Dxvk.MangoHudEnabled, Dxvk.MangoHudCustomIsFile, Dxvk.MangoHudString, Dxvk.Enabled);
+        var wineSettings = new WineSettings(Wine.IsManagedWine, Wine.CustomWinePath, Wine.FolderName, Wine.DownloadUrl, storage.Root, Wine.DebugVars, Wine.LogFile, Wine.Prefix, Wine.ESyncEnabled, Wine.FSyncEnabled, Wine.ProtonInfo);
         var toolsFolder = storage.GetFolder("compatibilitytool");
-        var wine = WineManager.GetSettings();
-        var dxvk = DxvkManager.GetSettings(Program.Config.WineType == WineType.Proton);
-        CompatibilityTools = new CompatibilityTools(wine, dxvk, (wine.IsProton ? protonPrefix : winePrefix), toolsFolder, wineLogFile, Distro.IsFlatpak);
+        CompatibilityTools = new CompatibilityTools(wineSettings, dxvkSettings, Config.GameModeEnabled, toolsFolder, OSInfo.IsFlatpak);
     }
 
     public static void ShowWindow()
@@ -451,8 +435,7 @@ class Program
         storage.GetFolder("wineprefix").Delete(true);
         storage.GetFolder("wineprefix");
         storage.GetFolder("protonprefix").Delete(true);
-        var protonPrefix = storage.GetFolder("protonprefix");
-        protonPrefix.CreateSubdirectory("pfx");
+        storage.GetFolder("protonprefix/pfx");
     }
 
     public static void ClearPlugins(bool tsbutton = false)
@@ -480,9 +463,22 @@ class Program
 
     public static void ClearTools(bool tsbutton = false)
     {
-        storage.GetFolder("compatibilitytool").Delete(true);
-        storage.GetFolder("compatibilitytool/wine");
-        storage.GetFolder("compatibilitytool/dxvk");
+        foreach (var winetool in Wine.Versions)
+        {
+            if (winetool.Value.ContainsKey("url"))
+                if (!string.IsNullOrEmpty(winetool.Value["url"]))
+                    storage.GetFolder($"compatibilitytool/wine/{winetool.Key}").Delete(true);
+        }
+        foreach (var dxvktool in Dxvk.Versions)
+        {
+            if (dxvktool.Value.ContainsKey("url"))
+                if (!string.IsNullOrEmpty(dxvktool.Value["url"]))
+                    storage.GetFolder($"compatibilitytool/dxvk/{dxvktool.Key}").Delete(true);
+        }
+        // Re-initialize Versions so they get *Download* marks back.
+        Wine.Initialize();
+        Dxvk.Initialize();
+
         if (tsbutton) CreateCompatToolsInstance();
     }
 
@@ -507,7 +503,7 @@ class Program
         ClearLogs(true);
     }
 
-    public static bool? GetReshadeStatus()
+    public static bool? IsReshadeEnabled()
     {
         var gamepath = Path.Combine(Config.GamePath.FullName, "game");
         var dxgiE = Path.Combine(gamepath, "dxgi.dll");
